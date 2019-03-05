@@ -4,5 +4,7 @@ from Compresor import Compresor
 
 def main():
     lector = Lector(sys.argv[1],sys.argv[2])
-    lector.leer()
+    matrices = lector.leer()
+    compresor = Compresor(matrices[0], matrices[1])
+    compresor.compresionMPEG2()
 main()
