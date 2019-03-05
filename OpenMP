@@ -1,0 +1,27 @@
+El acercamiento que se tomara para paralerizar el algoritmo de compresión de imagenes es el siguiente:
+
+Considerando que los datos con los que trabaja el algoritmo son mapas de pixeles partidos en macrobloques, es de vital
+importancia que los Mapas de Macrobloques sean accesibles para todos los hilos, por lo tanto bajo el acercamiento de OpenMP
+los arreglos conteniendo los macrobloques deben estar definidos como públicos para todos los hilos.
+
+En OpenMP esto se logra definiendo las variables afuera de las clausulas que acoplan paralalelismo.
+Otra variable que tambien debe ser visible para todos los hilos es la matriz de vectores de movimiento que servira para imprimir el resultado.
+
+En el algoritmo de compresión de imagenes hay dos principales operaciones que se deben paralerizar:
+
+1. Las iteracciones que comparan pixel por pixel entre macrobloques.
+2. Las iteracciones que iteran sobre el arreglo de macrobloques para comparar los macrobloques de ambas imagenes.
+
+En ambos casos el objetivo es paralerizar estas iteracciones (de ciclos for) de forma adecuada:
+
+Para el primer caso, la formula que compara pixeles de macrobloques se basa en una suma que ocurre cuando dos pixeles son iguales, es
+muy importante que este valor no sea sobreescrito por otra suma que este tomando lugar, se puede usar una funcion de "parallel reduction"
+al operador de suma (+) para controlar la carrera de datos, de esta forma se puede obtener el resultado esperado. Ya que todas las
+operaciones de estas iteracciones son iguales, el modo de agendar estas iteracciones "dynamic" sería adecuado para garantizar la eficiencia.
+
+Para el segundo caso, la operacion principal consiste comparar el macrobloque con todos los macrobloques de la matriz (en el peor de los
+casos), ya que la operacion no se ve afectada por carrera de datos y el objetivo que el momento de terminar todas las iteracciones se cree
+un vector de movimiento para imprimir resultados, no es necesario añadir mecanismos de proteccion a las iteraciones, sin embargo existe una
+condición de parada (cuando la comparacion entre dos macrobloques da 0), que debe terminar todas las otras iteraciones en el caso de que
+ocurra, por lo tanto no se puede usar un modo de agendar como "static" que define el tamaño de todas las iteraciones al inicio, "guided" 
+sería más adecuado para este acercamiento.
