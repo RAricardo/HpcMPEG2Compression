@@ -1,4 +1,4 @@
-class Vector2:
+class Vector4:
     def __init__(self,i, j, x, y):
         self.i = i
         self.j = j
