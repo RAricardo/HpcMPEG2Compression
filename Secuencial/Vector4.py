@@ -6,4 +6,4 @@ class Vector4:
         self.y = y
 
     def imprimir(self):
-        print("MB(" + i + "," + j + ")=(x"+ x + ",y" + y+") ")
+        print("MB(" + str(self.i) + "," + str(self.j) + ")=(x"+ str(self.x) + ",y" + str(self.y)+") ")

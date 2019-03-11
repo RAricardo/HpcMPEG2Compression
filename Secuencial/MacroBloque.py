@@ -9,11 +9,7 @@ class MacroBloque:
     #Compara este macrobloque con otro macrobloque
     def comparar(self, MB):
         contadorCoincidencias = 0
-        print("MB1 = ")
-        print(len(self.arr))
-        print("MB2 = ")
-        print(len(MB.arr))
         for i in range(len(MB.arr)):
             if(self.arr[i] != MB.arr[i]):
-                contadorCoincidencias+1
+                contadorCoincidencias = contadorCoincidencias+1
         return contadorCoincidencias

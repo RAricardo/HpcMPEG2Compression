@@ -8,5 +8,4 @@ def main():
     datos = lector.leer()
     compresor = Compresor(datos[0], datos[1], datos[2], datos[3])
     compresor.compresionMPEG2()
-    compresor.imprimirResultados()
 main()
