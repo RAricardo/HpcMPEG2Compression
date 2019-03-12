@@ -1,0 +1,3 @@
+El avance hasta la fecha ha consistido en programar el algoritmo en c++ y python de forma secuencial.
+Actualmente el codigo esta en proceso de ser paralelizado y el diseño en OpenMP se describe en el archivo OpenMP.md
+Se adjuntan dos imagenes para hacer pruebas.
