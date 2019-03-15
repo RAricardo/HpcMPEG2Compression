@@ -7,9 +7,9 @@ class macrobloque
 {
   public:
   int x,y;
-  vector<string>arr;
+  vector<int> arr;
   macrobloque(){}
-  macrobloque(vector<string>arr,int x, int y){
+  macrobloque(vector<int>arr,int x, int y){
     this->arr=arr;
     this->x=x;
     this->y=y;
@@ -17,12 +17,11 @@ class macrobloque
 
   int comparar(macrobloque MB){
       int contadorCoincidencias=0;
-      for(int i=0; i<this->arr.size();i++){
-          if(this->arr!=MB.arr){
+      for(int i=0; i<arr.size();i++){
+          if(arr[i]!=MB.arr[i]){
               contadorCoincidencias++;
           }
-      }    
-      return contadorCoincidencias;  
+      } 
+      return contadorCoincidencias;
   }
-
 };
