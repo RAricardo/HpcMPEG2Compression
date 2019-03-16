@@ -8,12 +8,12 @@
 #include <vector>
 #include <queue>
 #include "macrobloque.cpp"
+#include <omp.h>
 #define HEADER_SIZE 54
 
 using namespace std;
 
-typedef struct
-{
+typedef struct{
     unsigned char signature[2];
     unsigned int width;
     unsigned int height;
@@ -75,10 +75,8 @@ class lector
 
             bmp_frame.pixels = (unsigned char **)malloc((size_t)bmp_frame.height * sizeof(unsigned char **));
 
-            for (int row = 0; row < bmp_frame.height; ++row)
-            {
-                bmp_frame.pixels[row] =
-                    (unsigned char *)malloc((size_t)bmp_frame.width);
+            for (int row = 0; row < bmp_frame.height; ++row) {
+                bmp_frame.pixels[row] = (unsigned char *)malloc((size_t)bmp_frame.width);
             }
 
             fseek(bmp_file, matrix_addr - HEADER_SIZE, SEEK_CUR);
@@ -86,10 +84,11 @@ class lector
             for (int row = 0; row < bmp_frame.height; ++row)
             {
                 if (fread((void *)bmp_frame.pixels[row], sizeof(unsigned char),
-                          (size_t)bmp_frame.width, bmp_file) != bmp_frame.width)
+                            (size_t)bmp_frame.width, bmp_file) != bmp_frame.width)
                     ;
             }
         }
+
 
         fclose(bmp_file);
         return bmp_frame;
@@ -117,7 +116,7 @@ class lector
         {
             vector<int> columna = vector<int>();
             matrizPixeles.push_back(columna);
-            for (int j = 0; j < h; j++)
+            for (int j = 0; j < h; ++j)
             {
                 matrizPixeles[i].push_back(matrizDoble.front());
                 matrizDoble.pop();
@@ -173,18 +172,33 @@ class lector
     }
 
     vector<vector<macrobloque> > leer()
-    {
-        vector<vector<int> > matrizPixel1 = llenarMatrizPixeles(this->frame1);
-        vector<vector<int> > matrizPixel2 = llenarMatrizPixeles(this->frame2);
-
-        vector<macrobloque> ArrMB1 = crearArregloMB16x16(matrizPixel1, w, h);
-
-        vector<macrobloque> ArrMB2 = crearArregloMBpxp(matrizPixel2, w, h);
-        vector<vector<macrobloque> > datos;
-
-        datos.push_back(ArrMB1);
-        datos.push_back(ArrMB2);
-
+    {   
+      vector<vector<macrobloque> > datos;
+      int nthreads, tid;
+      nthreads = omp_get_num_threads();
+      if (nthreads > 1){
+      #pragma omp parallel private(nthreads, tid)
+      {
+            tid = omp_get_thread_num();
+            if(tid == 0){
+                vector<vector<int> > matrizPixel1 = llenarMatrizPixeles(this->frame1);
+                vector<macrobloque> ArrMB1 = crearArregloMB16x16(matrizPixel1, w, h);
+                datos.push_back(ArrMB1);
+            }
+            if(tid == 1){
+                vector<vector<int> > matrizPixel2 = llenarMatrizPixeles(this->frame2);
+                vector<macrobloque> ArrMB2 = crearArregloMBpxp(matrizPixel2, w, h);
+                datos.push_back(ArrMB2);
+            }
+      }
+      } else {
+	    vector<vector<int> > matrizPixel1 = llenarMatrizPixeles(this->frame1);
+	    vector<vector<int> > matrizPixel2 = llenarMatrizPixeles(this->frame2);
+            vector<macrobloque> ArrMB1 = crearArregloMB16x16(matrizPixel1, w, h);
+	    vector<macrobloque> ArrMB2 = crearArregloMBpxp(matrizPixel2, w, h);
+            datos.push_back(ArrMB1); 		
+            datos.push_back(ArrMB2);
+      }
         return datos;
     }
 };

@@ -16,7 +16,7 @@ class vector4
     this->y=y;
   }
 
-  void imprimir(){
-      cout<<"MB("<<this->i<<","<<this->j<<")=(x"<<this->x<<",y"<<this->y<<") "<<endl;
+  void imprimir(){  
+    cout<<"MB("<<this->i<<","<<this->j<<")=(x"<<this->x<<",y"<<this->y<<") "<<endl;
   }
 };
