@@ -25,10 +25,11 @@ int main(int argc, char *argv[])
     }
     else
     {
-        c.compresionMPEG2();
+        c.compresionMPEG2(world_rank);
         time_t stop = time(0);
         double time = (double)difftime(stop, start) * 1000.0;
         cout << time << endl;
+        MPI_Finalize();
         return 0;
     }
 }
