@@ -22,7 +22,7 @@ public:
     int contadorCoincidencias = 0;
     for (int i = 0; i < 225; ++i){
         if (arr[i] != MB.arr[i]){
-	      #pragma omp atomic
+	  #pragma omp atomic
           ++contadorCoincidencias;
         }
       }

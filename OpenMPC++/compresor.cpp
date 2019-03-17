@@ -4,6 +4,7 @@
 #include "macrobloque.cpp"
 #include "vector4.cpp"
 #include <omp.h>
+#include <mpi.h>
 
 using namespace std;
 
@@ -21,14 +22,13 @@ class compresor
   }
 
   void compresionMPEG2(){
-        
+
 #pragma omp parallel for schedule(dynamic, 8)
     for(int i=0;i<MBArr1.size();++i){
-            int valMin=256;
-            vector4 vector;
-            bool compZero = false;
-	    int comparacion;
-	    
+        int valMin=256;
+        vector4 vector;
+        bool compZero = false;
+	    int comparacion;	    
 	    // #pragma omp parallel for schedule(guided)
             for(int j=0;j<MBArr2.size();++j){
                 if (compZero) {
