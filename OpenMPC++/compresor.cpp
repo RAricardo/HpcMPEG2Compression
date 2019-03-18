@@ -4,7 +4,6 @@
 #include "macrobloque.cpp"
 #include "vector4.cpp"
 #include <omp.h>
-#include <mpi.h>
 
 using namespace std;
 

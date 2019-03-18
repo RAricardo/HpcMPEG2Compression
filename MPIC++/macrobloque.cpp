@@ -8,13 +8,13 @@ class macrobloque
 {
 public:
   int x, y;
-  int arr [];
+  int* arr;
   macrobloque() {}
   macrobloque(vector<int> arr, int x, int y)
   {
     this->x = x;
     this->y = y;
-    int newArr[225];
+    int newArr[arr.size()];
     copy(arr.begin(), arr.end(), newArr);
     this->arr = newArr;
   }

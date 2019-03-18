@@ -9,6 +9,7 @@
 #include <queue>
 #include "macrobloque.cpp"
 #include <omp.h>
+
 #define HEADER_SIZE 54
 
 using namespace std;
