@@ -8,13 +8,15 @@ class macrobloque
 {
 public:
   int x, y;
-  vector<int> arr;
+  int arr [];
   macrobloque() {}
   macrobloque(vector<int> arr, int x, int y)
   {
-    this->arr = arr;
     this->x = x;
     this->y = y;
+    int newArr[225];
+    copy(arr.begin(), arr.end(), newArr);
+    this->arr = newArr;
   }
 
   int comparar(macrobloque MB)
@@ -22,7 +24,7 @@ public:
     int contadorCoincidencias = 0;
     for (int i = 0; i < 225; ++i){
         if (arr[i] != MB.arr[i]){
-	  #pragma omp atomic
+	      #pragma omp atomic
           ++contadorCoincidencias;
         }
       }
