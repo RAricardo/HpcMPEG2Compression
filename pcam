@@ -1,0 +1,41 @@
+A continuación se describe el diseño del algoritmo de compresión MPEG2 bajo la metodología PCAM:
+
+Problema:
+
+El problema a resolver consiste en comparar los macrobloques de un frame con respecto a otro, de tal forma que se puedan determinar los
+vectores de movimiento de estos macrobloques, y determinar que partes de un frame son iguales a otras (o muy parecidas). Como fue descrito
+en el archivo de openmp, este algoritmo tiene una alta complejidad de O(n*m*256) y puede escalar a grandes tiempos de ejecucion con imagenes
+muy grandes, afortunadamente existen muchas oportunidades en las que se puede aprovechar el particionamiento del problema con multiples
+procesadores e hilos para acelerar el algoritmo.
+
+Particiones:
+
+Como fue descrito en el archivo de openmp.md, se comparan los macrobloques de un frame con los de otro frame, y se debe en el peor de los
+casos se debe hacer una busqueda completa de un MB del primer frame con todos los del segundo frame. Esto quiere decir que la lista que
+contiene los macrobloques del primer frame se puede dividir para que sea procesada en diferentes partes, asignandole a cada proceso un número
+determinado de macrobloques para que comparen en paralelo con los macrobloques del segundo frame. Por lo tanto, ya que se necesitan comparar
+con todos los macrobloques del segundo frame, el arreglo completo de los macrobloques del segundo frame puede ser enviado en una señal de
+broadcast a todos los procesadores, mientras que el primer arreglo que contiene los macrobloques del primer frame se puede partir para ser
+procesado en diferentes partes con una señal de Scatter.
+
+Comunicación:
+
+En MPI la partición descrita anteriormente se logra con dos señales en el nodo maestro (proceso 0), una señal de broadcast con el segundo
+arreglo a los nodos esclavos y una señal de scatter con el primer arreglo a los nodos esclavos, ya que solamente es necesario imprimri los
+resultados y no enviarlos al nodo maestro a procesar otra información, no sera necesaria una señal de gather despues del scatter.
+
+Aglomeración:
+
+En MPI solo existen tipos de datos primitivos, por lo tanto no se pueden enviar directamente las estructuras de macrobloques, que estan
+compuestas por coordenadas (x,y) y un arreglo de pixeles. Por lo tanto se aprovecha una función de MPI para crear tipos personalizados
+llamada MPI_Type_create_struct, en esta funcion es posible describir tipos de datos complejos (como macrobloques) de tal forma que puedan
+ser enviados en la señales de MPI_Bcast y MPI_Scatter, el resto de procesadores al recibir estos datos pueden reconstruir los macrobloques
+y ejecutar el resto del algoritmo naturalmente.
+
+Mapeo:
+
+Con la función MPI_Scatter es posible asignarle a cada proceso un número determinado de macrobloques por procesar, de tal forma que crea 
+arreglos de macrobloques de igual tamaño que pueden ser corridos en el algoritmo de forma paralela, por lo tanto no solamente estos
+macrobloques seran divididos entre procesos, sino tambien entre hilos, lo cual acelera a gran escala el algoritmo. Afortunadamente
+MPI_Scatter no excluye al proceso maestro en enviarles partes iguales del arreglo a los procesadores, por lo tanto el nodo maestro no
+se queda bloqueado y puede ayudar a procesar macrobloques junto a sus esclavos.
