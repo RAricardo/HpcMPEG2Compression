@@ -1,0 +1,77 @@
+Este documento describe el diseño de programación en paralela utilizando el framework OpenMP para multithreading:
+
+El algoritmo consiste en determinar los vectores movimientos de los macrobloques de un frame con respecto a otro, en este contexto
+y en el modo en el que se diseño el algoritmo existen muchas oportunidades para paralerizar el código.
+
+El algoritmo principalmente consiste en comparar los pixeles de los macrobloques de un frame con respecto a otro. Esto se debe hacer en 3
+pasos:
+
+Asumiendo que los macrobloques de cada frame se guardan en dos arreglos distintos...
+
+1. Seleccionar un macrobloque del primer frame. (Primer ciclo for (n))
+2. Seleccionar un macrobloque del segundo frame. (Segundo ciclo for anidado (m))
+3. Compararlo con el macrobloque del primero (esto se logra por medio de una formula
+matematica, que compara los macrobloques a nivel de pixeles). (tercer ciclo for aninado (256))
+
+Si los macrobloques son iguales (la formula da 0) simplemente imprime el vector de movimiento representando que no hubo movimiento entre
+los macrobloques (MB1(x0, yj0) =MB2(x0,y0)), pero en el caso contrario se debera comparar el primer macrobloque con los macrobloques del
+segundo frame hasta que se encuentre uno igual, sino se encuentra se debera recorrer todo el arreglo y crear el vector de movimiento con
+el más parecido.
+
+En el peor de los casos este algoritmo es de complejidad O(n*m*256), por lo tanto se deben encontrar oportunidades para paralerizarlo.
+
+En el algoritmo se encuentran dos fuertes oportunidades para aprovechar la programación de multihilos. Esto es en el primer ciclo y en el
+tercer ciclo. 
+
+En el primer ciclo encargado de seleccionar los MBs del frame1 para su comparación con los del segundo arreglo, es un ciclo que facilmente
+se puede paralerizar, ya que los MBs recuerdan sus posiciones x, y al imprimir sus vectores de movimiento no hay que tomar en cuenta en que
+iteraccion fueron computados y no son vulnerables a carreras de datos. Facilmente los hilos se pueden distribuir los MBs (iteracciones del
+primer for) e ir comparandolos en paralelo. En openmp esto se puede lograr con la clausula:
+
+#pragma omp parallel for
+
+Tambien se le asigna:
+
+schedule(dynamic)
+
+Ya que como no se sabe que iteracciones puedan tardar más que otras, es mejor asignarlas de forma dinamica en vez de decidir que hilos van
+a trabajar ciertas iteracciones, lo cual pudiera llevar a casos bloqueantes dentro del algoritmo.
+
+El segundo ciclo es muy suceptible a carreras de datos, ya que se encarga de llamar el metodo de comparacion (tercer for), esta comparacion
+siempre devuelve un valor que no puede ser sobreescrito por ninguna iteraccion y esencialmente, si una iteraccion da 0 en esta comparacion
+se deben terminar inmediatamente todas las iteracciones y se debe seguir con el siguiente macrobloque, lo cual es imposible en OpenMP ya que
+no se permite los breaks ni los ciclos whiles, la única forma de lograr esto sería con una espera activa lo cual es una operación bloqueante
+que volvería más lento el algoritmo innecesariamente, ademas que para evitar las carreras de datos se tendrian que establecer secciones
+criticas que volverían aún más lentas las iteracciones de este ciclo.
+
+Por último, esta el ciclo de comparación pixel a pixel, en sintesis lo que hace esta comparación es determinar que tantos pixeles son iguales
+entre dos macrobloques, esto se logra por medio de una formula matematica y finalmente se suma cuantos pixeles fueron iguales, si la suma
+da 0, los macrobloques son iguales, y se debe continuar con el siguiente macrobloque. Ya que los macrobloques son de 16 x 16 pixeles, siempre
+son 256 iteracciones que se pueden paralerizar seguramente, la única condición de carrera existe en la variable incremental de coincidencias
+pero ya que solo es una línea de incremento se puede establecer dentro de una eficiente sección atomatica o con una clausula de parallel reduction:
+
+#pragma omp parallel for reduction(+:contadorCoincidencias)
+
+O
+
+#pragma omp parallel for
+(iteracciones)
+#pragma omp atomic
+(incrementar contador)
+
+Ambas opciones funcionan bien para este caso de uso.
+
+Finalmente se pueden encontrar otras oportunidades para paralerizar programa en general en menor escala, por ejemplo: que un thread vaya
+leyendo los datos de una imagen, mientras otro lee los de la otra imagen:
+
+#pragma omp parallel
+
+if(threadid == 0) {
+ leerImagen1
+}
+
+if(threadid == 0) {
+ leerImagen2
+}
+
+Estas fueron las oportunidades que se encontraron para paralerizar este algoritmo.
